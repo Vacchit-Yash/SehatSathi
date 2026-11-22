@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SehatSaathi | Public Healthcare Navigation</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#183047;background:#f4f7f9}
+*{box-sizing:border-box}body{margin:0}.top{background:#145b52;color:white;padding:24px max(20px,calc((100% - 900px)/2))}
+.top h1{margin:0 0 5px;font-size:1.8rem}.top p{margin:0;opacity:.94}
+main{max-width:900px;margin:24px auto;padding:0 16px}.panel{background:white;border:1px solid #d7e1e7;border-radius:14px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px #15364a0b}
+label{display:block;font-weight:650;margin:12px 0 6px}input,select,textarea{width:100%;padding:11px;border:1px solid #aebfc9;border-radius:8px;font:inherit;background:white}
+button{margin-top:16px;background:#145b52;color:white;border:0;border-radius:9px;padding:12px 18px;font-weight:700;font-size:1rem;cursor:pointer}
+button:focus,input:focus,select:focus,textarea:focus{outline:3px solid #8ed4c6;outline-offset:2px}
+.note{font-size:.92rem;color:#4b6271}.alert{background:#fff0ed;border:1px solid #e9a79b;padding:14px;border-radius:10px;color:#792719}
+.result{display:none}.result h2{margin-top:0}.tag{display:inline-block;background:#e4f2ee;color:#145b52;padding:4px 9px;border-radius:99px;font-size:.85rem;font-weight:700}
+ul{padding-left:22px;line-height:1.6}.foot{font-size:.85rem;color:#526775;text-align:center;padding:12px}
+</style>
+</head>
+<body>
+<header class="top"><h1>SehatSaathi</h1><p>Public healthcare navigation and visit-preparation assistant</p></header>
+<main>
+<section class="panel">
+<h2>How can we help?</h2>
+<p class="note">This demo helps you prepare for a public-health facility visit. It does not diagnose illness, prescribe medicines, or confirm live facility availability. Do not enter names, Aadhaar numbers, phone numbers, or other personal identifiers.</p>
+<div class="alert"><strong>Emergency?</strong> If someone may be in immediate danger, has severe chest pain, severe breathing difficulty, unconsciousness, uncontrolled bleeding, or another life-threatening condition, do not use this form. Call India’s emergency number <strong>112</strong> or go to the nearest emergency department now.</div>
+<label for="need">What service are you looking for?</label>
+<select id="need">
+<option value="general">General check-up / outpatient consultation</option>
+<option value="maternal">Pregnancy / antenatal care information</option>
+<option value="child">Child immunisation information</option>
+<option value="screening">Blood pressure / diabetes screening information</option>
+<option value="documents">Preparing documents for a public hospital visit</option>
+<option value="other">Something else</option>
+</select>
+<label for="location">Your district and state (optional)</label>
+<input id="location" placeholder="Example: Bulandshahr, Uttar Pradesh">
+<label for="language">Preferred language</label>
+<select id="language"><option>English</option><option>Hindi</option></select>
+<label for="question">Anything else we should know? (Do not include private identifiers)</label>
+<textarea id="question" rows="3" placeholder="Describe the public service you are trying to access. Do not ask for diagnosis or medicine advice."></textarea>
+<button id="go">Get navigation guidance</button>
+</section>
+<section id="result" class="panel result" aria-live="polite"></section>
+<section class="panel">
+<h3>Important limitations</h3>
+<ul><li>This demo does not search a live directory or identify the nearest facility.</li><li>Facility services, timings, eligibility and required documents vary by location and can change.</li><li>Document suggestions below are preparation ideas, not universal mandatory requirements.</li><li>Confirm details with the relevant government facility, official state health portal, or community health worker.</li></ul>
+</section>
+<div class="foot">Student prototype • PROMPT ROCKERS • Team ID PE-B81-11</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const emergencyWords=/severe chest pain|difficulty breathing|can't breathe|cannot breathe|unconscious|uncontrolled bleeding|not waking|life.?threatening/i;
+const diagnosisWords=/diagnos(e|is)|what disease|which medicine|what medicine|prescribe|dosage|dose of/i;
+function render(title,body){$('result').style.display='block';$('result').innerHTML='<span class="tag">Guidance</span><h2>'+title+'</h2>'+body;$('result').scrollIntoView({behavior:'smooth',block:'start'});}
+$('go').addEventListener('click',()=>{
+ const q=$('question').value.trim(), need=$('need').value, loc=$('location').value.trim();
+ if(emergencyWords.test(q)){render('Emergency guidance','<div class="alert"><strong>Seek emergency help now.</strong> Call 112 in India or go to the nearest emergency department. Do not wait for this assistant or continue routine navigation.</div>');return;}
+ if(diagnosisWords.test(q)){render('Outside this assistant’s scope','<p>I can’t diagnose a condition, recommend a medicine, or provide a dose. Please speak with a qualified health professional at an appropriate health facility. If symptoms are severe or life-threatening, call 112.</p>');return;}
+ const advice={
+ general:'For a routine consultation, a nearby public primary-care facility (such as an Ayushman Arogya Mandir or Primary Health Centre, where available) may be a reasonable first point of contact. Ask the local health worker which facility provides the service you need.',
+ maternal:'For antenatal-care information, contact your local public primary-care facility or ASHA/ANM/community health worker. They can confirm the appropriate clinic, schedule and local process.',
+ child:'For immunisation information, contact your local ASHA/ANM or public health facility to confirm the session date, location and vaccine availability.',
+ screening:'For screening information, contact a public primary-care facility and ask whether the relevant screening service is offered there and when it is available.',
+ documents:'Ask the destination facility which documents are required for your specific service before travelling.',
+ other:'Please describe the public service you are trying to access, or ask a local ASHA/ANM or public health facility to identify the correct service point.'
+ };
+ const docs='<h3>Commonly useful preparation items (not a mandatory list)</h3><ul><li>Any existing relevant prescriptions, referral slips or health records, if you already have them.</li><li>Previous test reports relevant to the visit, if available.</li><li>Any appointment or registration confirmation, if one was issued.</li><li>A list of questions you want to ask the health worker.</li></ul><p><strong>Important:</strong> Do not assume identity documents or any particular card are universally required. Confirm the exact requirements with the facility.</p>';
+ const locline=loc?'<p><strong>Location noted:</strong> '+escapeHtml(loc)+'. This offline demo does not verify facilities in that district.</p>':'<p>Add your district/state when contacting the local health service so they can guide you to the correct facility.</p>';
+ render('Suggested next step','<p>'+advice[need]+'</p>'+locline+docs+'<p><strong>Verification:</strong> No live facility directory was queried for this answer. Confirm service availability, timings, eligibility and required documents with the facility or official state health source before travelling.</p>');
+});
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+</script>
+</body></html>
